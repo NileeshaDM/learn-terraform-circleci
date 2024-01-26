@@ -1,7 +1,7 @@
 version: 2
-
+# jobs are used to define the commands that should be run and workflows are used to define excution order of jobs.
 jobs:
-  plan-apply:
+  plan-apply: # Create a temperary terraform resources and persist it to workspace
     working_directory: /tmp/project
     docker:
       - image: docker.mirror.hashicorp.services/hashicorp/terraform:light
@@ -12,16 +12,16 @@ jobs:
           command: |
             terraform init -input=false
             terraform plan -out tfapply -var-file terraform.tfvars
-      - persist_to_workspace:
+      - persist_to_workspace: # save the initialized configuration and environment variables to workspace
           root: .
           paths:
             - .
 
-  apply:
+  apply: # Create actual terraform resources
     docker:
       - image: docker.mirror.hashicorp.services/hashicorp/terraform:light
     steps:
-      - attach_workspace:
+      - attach_workspace: # retrieve the initialized configuration and environment variables from workspace
           at: .
       - run:
           name: terraform
@@ -32,7 +32,7 @@ jobs:
           paths:
             - .
 
-  plan-destroy:
+  plan-destroy: 
     docker:
       - image: docker.mirror.hashicorp.services/hashicorp/terraform:light
     steps:
@@ -63,7 +63,7 @@ workflows:
     jobs:
       - plan-apply
       - hold-apply:
-          type: approval
+          type: approval # hold the workflow until a user manually approve it
           requires:
             - plan-apply
       - apply:
